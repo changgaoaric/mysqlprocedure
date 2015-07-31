@@ -1,0 +1,43 @@
+1 循环创建
+DELIMITER $$
+CREATE
+PROCEDURE gaogao()
+BEGIN
+DECLARE i INT DEFAULT 0;
+WHILE i < 40 DO
+INSERT INTO procedurehuihui(CODE,NAME,dates)
+  VALUES('lover','chang',NOW());
+SET i = i + 1;
+END WHILE;
+END$$
+DELIMITER ;
+
+SHOW PROCEDURE STATUS;
+CALL gaogao();
+SELECT * FROM test.`procedurehuihui`;
+-------------------------------------------------------------------------------------------------------------------
+  ---------------------------------------------------------------------------------------------------------------
+2，动态创建表
+SET @sql_create_table = CONCAT(
+  'CREATE TABLE IF NOT EXISTS operrecord_', DATE_FORMAT(CURDATE(),'%y%m%d'),
+  "(
+    `oper_id` int(10) NOT NULL AUTO_INCREMENT,
+    `oper_role` int(11) NOT NULL, 
+    `oper_type` varchar(30) NOT NULL DEFAULT '',
+    `oper_content` varchar(1000) NOT NULL DEFAULT '',
+    `oper_cls` int(10) NOT NULL DEFAULT '0',
+    `oper_date` datetime NOT NULL,
+    `oper_serverid` int(11) NOT NULL DEFAULT '1',
+    PRIMARY KEY (`oper_id`)
+  ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8");
+  
+  PREPARE sql_create_table FROM @sql_create_table;   
+  EXECUTE sql_create_table;
+  ---------------------------------------------------------------------------------------------------------------
+ SET @rId = 'rId', @type ='type01', @content = 'content', @cls = 'cls', @serverid = 'serverid';
+  SET @sql_oper_revcord = CONCAT(
+  "INSERT INTO operrecord_", DATE_FORMAT(CURDATE(),'%y%m%d'), 
+  " (`oper_role`, `oper_type`, `oper_content`, `oper_cls`, `oper_serverid`, `oper_date`) 
+    values (@rId, @type, @content, @cls, @serverid, NOW())");
+  PREPARE sql_oper_revcord FROM @sql_oper_revcord;   
+  EXECUTE sql_oper_revcord;

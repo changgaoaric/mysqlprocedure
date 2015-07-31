@@ -41,3 +41,38 @@ SET @sql_create_table = CONCAT(
     values (@rId, @type, @content, @cls, @serverid, NOW())");
   PREPARE sql_oper_revcord FROM @sql_oper_revcord;   
   EXECUTE sql_oper_revcord;
+  
+-------------------------------------------------------------------------------------------------------------------
+  ---------------------------------------------------------------------------------------------------------------
+
+3，存储过程的输入以及输出
+REATE TABLE `fortest` (
+  `ID` INT(30) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `IP` VARCHAR(32) NOT NULL,
+  `OID` VARCHAR(15) DEFAULT NULL);
+ DESC fortest;
+ 
+ DROP PROCEDURE IF EXISTS `autoinsert`;
+DELIMITER $$
+SET @IP="123",@OID="456"$$
+CREATE  PROCEDURE `autoinsert`(IN IP_NUM INT, IN OID_NUM INT)
+BEGIN
+  DECLARE iIP INT DEFAULT 0 ;
+  DECLARE iOID INT DEFAULT 0 ;   
+   WHILE(iIP < IP_NUM)
+    DO
+      SET iOID = 0;
+      WHILE(iOID<OID_NUM)
+      DO
+        SET @mySql=CONCAT("INSERT INTO fortest (IP, OID) VALUES(@IP,@OID)");            
+        PREPARE stmt FROM @mySql;
+        EXECUTE stmt;  
+        DEALLOCATE PREPARE stmt;
+        SET iOID = iOID+1;
+      END WHILE;
+        SET iIP= iIP+1;
+    END WHILE;
+    END$$
+DELIMITER ;
+SET @IP_NUM=100,@OID_NUM=50;
+CALL autoinsert (@IP_NUM,@OID_NUM);

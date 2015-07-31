@@ -76,3 +76,61 @@ BEGIN
 DELIMITER ;
 SET @IP_NUM=100,@OID_NUM=50;
 CALL autoinsert (@IP_NUM,@OID_NUM);
+
+-------------------------------------------------------------------------------------------------------------------
+  ---------------------------------------------------------------------------------------------------------------
+
+4,固定时间查询并删除
+
+DROP TABLE IF EXISTS  `fortest01`;
+ CREATE TABLE `fortest01` (
+  `ID` INT(30) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `IP` VARCHAR(32) NOT NULL,
+  `OID` VARCHAR(15) DEFAULT NULL,
+  `regisitertime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP); 
+ DESC fortest01;
+ 
+ DROP PROCEDURE IF EXISTS `autoinsert`;
+DELIMITER $$
+SET @IP="123",@OID="456"$$
+CREATE  PROCEDURE `autoinsert`(IN IP_NUM INT, IN OID_NUM INT)
+BEGIN
+  DECLARE iIP INT DEFAULT 0 ;
+  DECLARE iOID INT DEFAULT 0 ;   
+   WHILE(iIP < IP_NUM)
+    DO
+      SET iOID = 0;
+      WHILE(iOID<OID_NUM)
+      DO
+        SET @mySql=CONCAT("INSERT INTO fortest01 (IP, OID) VALUES(@IP,@OID)");            
+        PREPARE stmt FROM @mySql;
+        EXECUTE stmt;  
+        DEALLOCATE PREPARE stmt;
+        SET iOID = iOID+1;
+      END WHILE;
+        SET iIP= iIP+1;
+    END WHILE;
+    END$$
+DELIMITER ;
+SET @IP_NUM=100,@OID_NUM=50;
+CALL autoinsert (@IP_NUM,@OID_NUM);
+
+CALL autoinsert (@IP_NUM,@OID_NUM);
+DROP PROCEDURE IF EXISTS `NewProc`;
+DELIMITER $$
+CREATE  PROCEDURE `NewProc`()
+BEGIN
+SELECT COUNT(*) INTO @count FROM fortest01  WHERE DATE_SUB(regisitertime, INTERVAL 1 DAY)<=NOW();
+ IF @count>0
+THEN
+ SET @today=TIME_TO_SEC(NOW());
+ SET @select_sql=CONCAT("select * from fortest01  where DATE_SUB(regisitertime, interval 1 DAY)<=NOW() 
+ INTO OUTFILE '/tmp/",@today,".txt'  FIELDS TERMINATED BY ',';");        
+ PREPARE charu FROM @select_sql;         
+ EXECUTE charu;
+ DELETE  FROM fortest01  WHERE DATE_SUB(regisitertime, INTERVAL 1 DAY)<=NOW() ;
+ COMMIT;
+END IF;
+END $$
+DELIMITER ;
+CALL NewProc;
